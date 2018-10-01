@@ -1,0 +1,43 @@
+version: '3.1'
+
+services:
+  rc-db:
+    image: mongo:latest
+    restart: always
+    container_name: rc-db
+    volumes:
+      - ./data/db-data:/data/db
+      - ./data/db-dump:/dump
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    command: mongod --smallfiles
+
+  rc-srv:
+    image: rocketchat/rocket.chat:latest
+    environment:
+      - MONGO_URL=mongodb://db:27017/rocketchat
+      - ROOT_URL=https://talk.dunro.com
+      - Accounts_UseDNSDomainCheck=True
+    links:
+      - rc-db:db
+    ports:
+      - 3030:3000
+    depends_on:
+      - rc-db
+
+
+  rc-hubot:
+    image: rocketchat/hubot-rocketchat:latest
+    environment:
+      - ROCKETCHAT_URL=rocketchat:3000
+      - ROCKETCHAT_ROOM=GENERAL
+      - ROCKETCHAT_USER=Botname
+      - ROCKETCHAT_PASSWORD= ${RC_PASS}
+      - BOT_NAME=Botname
+      - EXTERNAL_SCRIPTS=hubot-help,hubot-seen,hubot-links,hubot-greetings
+    links:
+      - rc-srv:rocketchat
+    ports:
+      - 3031:8080
+    depends_on:
+      - rc-srv

@@ -1,0 +1,51 @@
+version: '3.1'
+
+services:
+  nc-srv:
+    image: nextcloud:latest
+    restart: always
+    container_name: nc-srv
+    volumes:
+      - ./data/html:/var/www/html
+      - ./data/apps:/var/www/html/custom_apps
+      - ./data/config:/var/www/html/config
+      - ./data/srv-data:/var/www/html/data
+      - ./data/theme:/var/www/html/themes
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+       MYSQL_DATABASE: 'NextCloudDB'
+       MYSQL_USER: 'NextCloudUSER'
+       MYSQL_PASSWORD: ${USER_PASS}
+       MYSQL_HOST: nc-db
+       NEXTCLOUD_ADMIN_USER: 'Admin'
+       NEXTCLOUD_ADMIN_PASSWORD: ${ADMIN_PASS}
+    ports:
+      - 9875:80
+    depends_on:
+      - nc-db
+      - nc-redis
+
+  nc-db:
+    image: mariadb:latest
+    restart: always
+    container_name: nc-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ROOT_PASS}
+      MYSQL_USER: NextCloudUSER
+      MYSQL_PASSWORD: ${USER_PASS}
+      MYSQL_DATABASE: NextCloudDB
+    volumes:
+      - ./data/db-data:/var/lib/mysql
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
+  nc-redis:
+    image: redis:latest
+    restart: always
+    container_name: nc-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - ./data/redis-data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro

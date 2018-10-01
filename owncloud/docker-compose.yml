@@ -1,0 +1,31 @@
+version: '3.1'
+
+services:
+  oc-srv:
+    image: owncloud:latest
+    restart: always
+    container_name: cc-srv
+    volumes:
+      - ./data/apps:/var/www/html/apps
+      - ./data/config:/var/www/html/config
+      - ./data/srv-data:/var/www/html/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 9876:80
+    depends_on:
+      - oc-db
+
+  oc-db:
+    image: mariadb:latest
+    restart: always
+    container_name: oc-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ROOT_PASS}
+      MYSQL_USER: NextCloudUSER
+      MYSQL_PASSWORD: ${USER_PASS}
+      MYSQL_DATABASE: NextCloudDB
+    volumes:
+      - ./data/db-data:/var/lib/mysql
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
